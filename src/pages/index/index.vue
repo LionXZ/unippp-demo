@@ -11,8 +11,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { loginOrRegForMoblie } from '@/api/index';
+import { useStore } from 'vuex';
+const store: any = useStore();
+onMounted(() => {
+	store.commit('update_ticket', '');
+});
 const tel = ref<string>('18171171929');
 const smsCode = ref<string>('999999');
 const formSubmit = (e: any): void => {
@@ -21,7 +26,7 @@ const formSubmit = (e: any): void => {
 const login = async (tel: string, smsCode: string) => {
 	const data: any = await loginOrRegForMoblie(tel, smsCode);
 	const ticket: string = data?.data || '';
-	localStorage.setItem('ticket', ticket);
+	store.commit('update_ticket', ticket);
 	uni.navigateTo({
 		url: '/pages/allCategoryPages/allCategoryPages',
 		animationType: 'pop-in',

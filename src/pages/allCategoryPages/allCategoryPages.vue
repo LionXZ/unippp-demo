@@ -30,7 +30,7 @@
 <script setup lang="ts">
 import { queryCategories } from '@/api/index';
 import { nextTick } from 'process';
-import { onMounted, reactive, ref } from 'vue';
+import { getCurrentInstance, onMounted, reactive, ref } from 'vue';
 
 const proData = reactive<any>({
 	list: [],
@@ -55,22 +55,19 @@ onMounted(() => {
 	getCategories();
 });
 const allHeightNum = ref<number>(0);
+const instance: any = getCurrentInstance();
+
 //初始化右边商品的高度、起始高度数组，便于右边滑动，左边跟着动
 const loadScroNum = (): void => {
-	proData.list.forEach((el: any, index: number) => {
-		let ele: any = document.querySelector(`#content_item${el.id}`);
+	for (let index of proData.list) {
+		let ele: any = uni.createSelectorQuery().in(instance).select(`#content_item${proData.list[index].id}`);
 		// console.dir(ele);
 		proData.scroNum.push({
-			id: el?.id,
+			id: proData.list[index]?.id,
 			top: ele?.offsetTop,
 			bot: ele?.offsetTop + ele?.offsetHeight
 		});
-		// if (index == proData.list.length - 1) {
-		// 	allHeightNum.value += ele?.offsetTop + ele?.offsetHeight + 500;
-		// 	let content: any = document.querySelector(`.content`);
-		// 	content?.setAttribute('height', allHeightNum.value);
-		// }
-	});
+	}
 };
 // 监听右侧商品栏滑动事件，如果当前滑动的长度达到某个个区间内，则该区间的菜单为高亮
 const scrollRight = (e: any) => {

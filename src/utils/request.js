@@ -1,10 +1,12 @@
+import Store from '@/store';
 const requestConfig = {
-	baseUrl: '',
+	baseUrl: 'http://sit.lai-do.com',
 	timeout: 5 * 1000,
 	headers: {
 		'Accept-Language': 'zh-CN',
 	},
 };
+
 
 export default function request({
 	method,
@@ -20,10 +22,17 @@ export default function request({
 		...requestConfig,
 		...config
 	};
+	console.log(method,
+		url,
+		data);
 
 	uni.addInterceptor('request', (options) => {
 		return options;
 	});
+	if (Store?.state?.ticket) {
+		headers['lx-cors-request'] = 'true'
+		headers['lx-ticket'] = Store?.state?.ticket
+	}
 
 	return new Promise((resolve, reject) => {
 		uni.request({
@@ -33,11 +42,10 @@ export default function request({
 			header: {
 				...headers,
 				'content-type': 'application/json',
-				'lx-cors-request': 'true',
-				'lx-ticket': localStorage.getItem("ticket") || ''
 			},
 			timeout,
 			success: (res) => {
+				console.log(res);
 				if (res.statusCode === 200) {
 					resolve(res.data);
 				} else {

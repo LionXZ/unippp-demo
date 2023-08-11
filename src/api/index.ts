@@ -15,7 +15,7 @@ export const loginOrRegForMoblie = (tel: string, smsCode: string): any => {
 		})
 		.join('&');
 	return request({
-		url: '/api/userbusiness-service/userlogin/loginOrRegForMoblie.json?' + str,
+		url: '/userbusiness-service/userlogin/loginOrRegForMoblie.json?' + str,
 		method: 'POST'
 	});
 };
@@ -25,7 +25,7 @@ export const loginOrRegForMoblie = (tel: string, smsCode: string): any => {
  */
 export const queryCategories = () => {
 	return request({
-		url: '/api/inventory-service/assetShopMall/queryCategories.json',
+		url: '/inventory-service/assetShopMall/queryCategories.json',
 		method: 'GET'
 	});
 };
@@ -38,7 +38,7 @@ export const queryCategories = () => {
  */
 export const queryProductsByCategory = (pageNum: number, pageSize: number, categoryId: string) => {
 	return request({
-		url: '/api/inventory-service/assetShopMall/getShopGoodsByCategory.json',
+		url: '/inventory-service/assetShopMall/getShopGoodsByCategory.json',
 		method: 'GET',
 		data: {
 			pageSize,
