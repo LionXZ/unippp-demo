@@ -26,7 +26,6 @@ export default defineConfig({
 	build: {
 		// 输出文件目录
 		outDir: 'libs',
-		// 生产环境移除console
 		minify: 'terser',
 		target: 'es2015',
 		lib: {
