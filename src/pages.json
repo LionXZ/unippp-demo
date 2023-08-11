@@ -16,7 +16,10 @@
 			"path": "pages/productList/productList",
 			"style": {
 				"navigationBarTitleText": "",
-				"enablePullDownRefresh": true
+				"enablePullDownRefresh": true,
+				"app-plus": {
+					"bounce": "none"
+				}
 			}
 
 		}

@@ -22,10 +22,6 @@ export default function request({
 		...requestConfig,
 		...config
 	};
-	console.log(method,
-		url,
-		data);
-
 	uni.addInterceptor('request', (options) => {
 		return options;
 	});
@@ -45,7 +41,6 @@ export default function request({
 			},
 			timeout,
 			success: (res) => {
-				console.log(res);
 				if (res.statusCode === 200) {
 					resolve(res.data);
 				} else {

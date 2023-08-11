@@ -24,6 +24,9 @@ const formSubmit = (e: any): void => {
 	login('18171171929', '999999');
 };
 const login = async (tel: string, smsCode: string) => {
+	uni.showLoading({
+		title: '登录中'
+	});
 	const data: any = await loginOrRegForMoblie(tel, smsCode);
 	const ticket: string = data?.data || '';
 	store.commit('update_ticket', ticket);
@@ -32,6 +35,7 @@ const login = async (tel: string, smsCode: string) => {
 		animationType: 'pop-in',
 		animationDuration: 200
 	});
+	uni.hideLoading();
 };
 </script>
 

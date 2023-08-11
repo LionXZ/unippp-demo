@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import { queryProductsByCategory } from '@/api/index';
 import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
-import { onMounted, ref, reactive, defineAsyncComponent } from 'vue';
+import { onMounted, ref, reactive } from 'vue';
 
 // const List = defineAsyncComponent(() => import('./components/List.vue'));
 import List from './components/List.vue';
@@ -217,8 +217,8 @@ const touchstartAll = (e: any): void => {
 };
 const touchendAll = (e: any): void => {
 	endPosition.value = e?.changedTouches[0]?.clientX;
-	console.log(endPosition.value - startPosition.value);
-	//向左滑动-切换一级类目
+	// console.log(endPosition.value - startPosition.value);
+	//向右滑动-切换一级类目
 	if (endPosition.value - startPosition.value > 0) {
 		if (largeCategoryIndex.value > 0) {
 			//大类index--
@@ -228,8 +228,16 @@ const touchendAll = (e: any): void => {
 			//小类设为最后一个
 			activeId2.value = data[data.length - 1]?.id;
 			subclassIndex.value = data.length - 1;
-			//当前index  = length+1
-			currentIndex.value = data.length + 1;
+			//当前index  = length
+			currentIndex.value = data.length;
+
+			//右滑不会触发changeSwiper
+			categoryId.value = activeId2.value;
+			getData({
+				pageNum: page.pageNum,
+				pageSize: page.pageSize,
+				categoryId: categoryId.value
+			});
 		}
 	}
 };
@@ -239,8 +247,8 @@ const touchstart = (e: any): void => {
 };
 const touchend = (e: any): void => {
 	endPosition.value = e?.changedTouches[0]?.clientX;
-	console.log(endPosition.value - startPosition.value);
-	//向右滑动-切换一级类目
+	// console.log(endPosition.value - startPosition.value);
+	//向左滑动-切换一级类目
 	if (currentIndex.value >= proData?.data?.children[largeCategoryIndex.value]?.children?.length) {
 		if (endPosition.value - startPosition.value < 0) {
 			if (largeCategoryIndex.value < proData?.data?.children.length - 1) {

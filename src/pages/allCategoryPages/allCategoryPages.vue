@@ -59,14 +59,25 @@ const instance: any = getCurrentInstance();
 
 //初始化右边商品的高度、起始高度数组，便于右边滑动，左边跟着动
 const loadScroNum = (): void => {
-	for (let index of proData.list) {
-		let ele: any = uni.createSelectorQuery().in(instance).select(`#content_item${proData.list[index].id}`);
-		// console.dir(ele);
-		proData.scroNum.push({
-			id: proData.list[index]?.id,
-			top: ele?.offsetTop,
-			bot: ele?.offsetTop + ele?.offsetHeight
-		});
+	for (let item of proData.list) {
+		uni.createSelectorQuery()
+			.in(instance)
+			.select(`#content_item${item?.id}`)
+			.fields(
+				{
+					id: true,
+					rect: true,
+					size: true
+				},
+				(res: any) => {
+					proData.scroNum.push({
+						id: res?.id?.replace('content_item', '').trim(),
+						top: res?.top,
+						bot: res?.top + res?.height
+					});
+				}
+			)
+			.exec();
 	}
 };
 // 监听右侧商品栏滑动事件，如果当前滑动的长度达到某个个区间内，则该区间的菜单为高亮
