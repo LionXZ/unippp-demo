@@ -126,7 +126,7 @@ onMounted(() => {
 		categoryId: categoryId.value
 	});
 });
-
+//下拉刷新
 onPullDownRefresh(() => {
 	page.pageNum = 1;
 	page.pageSize = 10;
@@ -138,7 +138,7 @@ onPullDownRefresh(() => {
 });
 
 const status = ref<string>('more');
-//
+//加载更多
 const clickLoadMore = async () => {
 	status.value = 'loading';
 	page.pageNum++;
@@ -217,7 +217,7 @@ const touchstartAll = (e: any): void => {
 const touchendAll = (e: any): void => {
 	endPosition.value = e?.changedTouches[0]?.clientX;
 	// console.log(endPosition.value - startPosition.value);
-	//向左滑动
+	//向左滑动-切换一级类目
 	if (endPosition.value - startPosition.value > 0) {
 		if (largeCategoryIndex.value > 0) {
 			//大类index--
@@ -239,7 +239,7 @@ const touchstart = (e: any): void => {
 const touchend = (e: any): void => {
 	endPosition.value = e?.changedTouches[0]?.clientX;
 	// console.log(endPosition.value - startPosition.value);
-	//向右滑动
+	//向右滑动-切换一级类目
 	if (currentIndex.value >= proData?.data?.children[largeCategoryIndex.value]?.children?.length) {
 		if (endPosition.value - startPosition.value < 0) {
 			if (largeCategoryIndex.value < proData?.data?.children.length - 1) {
