@@ -1,17 +1,22 @@
-import request from '@/utils/request2.js';
+import request from '@/utils/request.js';
 /**
  * 手机号+验证码登录
  * @param tel 手机号
  * @param smsCode 验证码
  */
 export const loginOrRegForMoblie = (tel: string, smsCode: string): any => {
+	let data: any = {
+		tel,
+		smsCode
+	};
+	let str = Object.keys(data)
+		.map((el) => {
+			return `${el}=${data[el]}`;
+		})
+		.join('&');
 	return request({
-		url: '/api/userbusiness-service/userlogin/loginOrRegForMoblie.json',
-		method: 'post',
-		params: {
-			tel,
-			smsCode
-		}
+		url: '/api/userbusiness-service/userlogin/loginOrRegForMoblie.json?' + str,
+		method: 'POST'
 	});
 };
 
@@ -21,7 +26,7 @@ export const loginOrRegForMoblie = (tel: string, smsCode: string): any => {
 export const queryCategories = () => {
 	return request({
 		url: '/api/inventory-service/assetShopMall/queryCategories.json',
-		method: 'get'
+		method: 'GET'
 	});
 };
 
@@ -34,24 +39,11 @@ export const queryCategories = () => {
 export const queryProductsByCategory = (pageNum: number, pageSize: number, categoryId: string) => {
 	return request({
 		url: '/api/inventory-service/assetShopMall/getShopGoodsByCategory.json',
-		method: 'get',
-		params: {
+		method: 'GET',
+		data: {
 			pageSize,
 			pageNum,
 			categoryId
-		}
-	});
-};
-
-/**
- * 封面图
- */
-export const getCoverImage = (id: string) => {
-	return request({
-		url: '/api/storeservice/fileStore/downloadFile.json',
-		method: 'get',
-		params: {
-			id
 		}
 	});
 };

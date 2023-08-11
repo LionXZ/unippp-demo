@@ -4,13 +4,19 @@
     "version" : "0.0",
     "configurations" : [
         {
-            "default" : {
-                "launchtype" : "local"
-            },
-            "h5" : {
-                "launchtype" : "remote"
-            },
-            "type" : "uniCloud"
+        	"app-plus" : 
+        	{
+        		"launchtype" : "remote"
+        	},
+        	"default" : 
+        	{
+        		"launchtype" : "local"
+        	},
+        	"h5" : 
+        	{
+        		"launchtype" : "remote"
+        	},
+        	"type" : "uniCloud"
         },
         {
             "openVueDevtools" : true,

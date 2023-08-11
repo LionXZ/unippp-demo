@@ -16,7 +16,7 @@
 				</view>
 				<view class="list">
 					<view class="list_item" v-for="(el, index) of it?.children" :key="el?.id" @click="toList(it, el, index)">
-						<image :src="getSrc(el)" class="img"></image>
+						<image lazy-load :src="getSrc(el)" class="img"></image>
 						<view class="text">
 							{{ el?.name }}
 						</view>

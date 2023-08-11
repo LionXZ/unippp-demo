@@ -26,7 +26,7 @@
 		</scroll-view>
 		<!-- 二级 -->
 		<scroll-view class="subclass" :scroll-x="true" :scroll-into-view="`subclass_item${activeId2}`">
-			<view class="subclass_item" :class="{ active: activeId2 == 'All' }" :id="`subclass_itemAll`" @click="choosen2('All')">
+			<view class="subclass_item" :class="{ active: activeId2 == activeId1 + 'All' }" :id="`subclass_item${activeId1 + 'All'}`" @click="choosen2(activeId1 + 'All')">
 				<view class="subclass_item_content">
 					<view class="text">不限</view>
 				</view>
@@ -48,23 +48,22 @@
 		</scroll-view>
 		<!-- 列表区域 -->
 		<view class="main">
-			<swiper
-				class="swiper-box"
-				easing-function="easeInOutCubic"
-				:current-item-id="activeId2"
-				:acceleration="false"
-				@change="changeSwiper"
-				@transition="transition"
-				@animationfinish="animationfinish"
-			>
-				<swiper-item :item-id="'All'">
+			<swiper class="swiper-box" easing-function="easeInOutCubic" :current="currentIndex" :acceleration="false" @change="changeSwiper">
+				<swiper-item :item-id="activeId1 + 'All'" @touchstart="touchstartAll" @touchend="touchendAll">
 					<scroll-view scroll-y class="list">
-						<view class="productItem">不限</view>
+						<List :data="proData.secondaryData" :status="status" @clickLoadMore="clickLoadMore"></List>
 					</scroll-view>
 				</swiper-item>
-				<swiper-item v-for="(it, index) of proData?.data?.children[largeCategoryIndex]?.children" :key="it?.id" :item-id="it?.id">
+				<swiper-item
+					v-for="(it, index) of proData?.data?.children[largeCategoryIndex]?.children"
+					:key="it?.id"
+					:item-id="it?.id"
+					@touchstart="touchstart"
+					@touchend="touchend"
+				>
 					<scroll-view scroll-y class="list">
-						<view class="productItem">{{ it?.name }}</view>
+						<List :data="proData.secondaryData" :status="status" @clickLoadMore="clickLoadMore"></List>
+						<!-- {{ it?.name }} -->
 					</scroll-view>
 				</swiper-item>
 			</swiper>
@@ -74,8 +73,10 @@
 
 <script setup lang="ts">
 import { queryProductsByCategory } from '@/api/index';
-import { onLoad } from '@dcloudio/uni-app';
-import { onMounted, ref, reactive } from 'vue';
+import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
+import { onMounted, ref, reactive, defineAsyncComponent } from 'vue';
+
+const List = defineAsyncComponent(() => import('./components/List.vue'));
 
 interface Params {
 	pageNum: number;
@@ -113,21 +114,11 @@ onLoad((params: any) => {
 	categoryId.value = params?.id;
 	//初始大类选中
 	activeId1.value = params?.id;
+	activeId2.value = activeId1.value + 'All';
 	//初始大类index
 	largeCategoryIndex.value = params?.index;
 	proData.data = JSON.parse(params?.data);
-	console.log(proData?.data);
-	// setTimeout(() => {
-	// 	activeId1.value = proData.data?.children[6].id;
-	// }, 3000);
 });
-//查询数据
-const getData = async (params: Params) => {
-	const res = await queryProductsByCategory(params?.pageNum, params?.pageSize, params?.categoryId);
-	console.log(res);
-	proData.secondaryData = res?.data;
-};
-
 onMounted(() => {
 	getData({
 		pageNum: page.pageNum,
@@ -135,12 +126,40 @@ onMounted(() => {
 		categoryId: categoryId.value
 	});
 });
+
+onPullDownRefresh(() => {
+	page.pageNum = 1;
+	page.pageSize = 10;
+	getData({
+		pageNum: page.pageNum,
+		pageSize: page.pageSize,
+		categoryId: categoryId.value
+	});
+});
+
+const status = ref<string>('more');
+//
+const clickLoadMore = async () => {
+	status.value = 'loading';
+	page.pageNum++;
+	const res = await queryProductsByCategory(page?.pageNum, page?.pageSize, categoryId.value);
+	if (res?.data?.items?.length <= 0) {
+		status.value = 'no-more';
+	} else {
+		status.value = 'more';
+	}
+	proData.secondaryData = {
+		...proData.secondaryData,
+		items: [...proData.secondaryData?.items, ...res?.data?.items]
+	};
+};
+
 //切换tab
 const choosen = (id: string, i: number = -1): void => {
 	activeId1.value = id;
 	categoryId.value = id == 'All' ? proData.data?.id : id;
 	largeCategoryIndex.value = i;
-	activeId2.value = 'All';
+	activeId2.value = activeId1.value + 'All';
 	subclassIndex.value = -1;
 	currentIndex.value = 0;
 	getData({
@@ -149,12 +168,18 @@ const choosen = (id: string, i: number = -1): void => {
 		categoryId: categoryId.value
 	});
 };
+//查询数据
+const getData = async (params: Params) => {
+	const res = await queryProductsByCategory(params?.pageNum, params?.pageSize, params?.categoryId);
+	proData.secondaryData = res?.data;
+	uni.stopPullDownRefresh();
+};
 //二级切换tab
 const choosen2 = (id: string, i: number = -1): void => {
 	activeId2.value = id;
 	categoryId.value = id == 'All' ? proData.data?.children[largeCategoryIndex.value]?.id : id;
 	subclassIndex.value = i;
-	currentIndex.value = i;
+	currentIndex.value = i + 1;
 	getData({
 		pageNum: page.pageNum,
 		pageSize: page.pageSize,
@@ -163,56 +188,71 @@ const choosen2 = (id: string, i: number = -1): void => {
 };
 
 const currentIndex = ref<number>(0);
-//list切换
+const startPosition = ref<number>(0);
+const endPosition = ref<number>(0);
+
+//Swiper切换
 const changeSwiper = (e: any) => {
+	page.pageNum = 1;
+	page.pageSize = 10;
+	currentIndex.value = e?.detail?.current;
+	if (currentIndex.value == 0) {
+		activeId2.value = activeId1.value + 'All';
+	} else {
+		activeId2.value = e?.detail?.currentItemId;
+	}
+	categoryId.value = activeId2.value == activeId1.value + 'All' ? activeId1.value : activeId2.value;
+	getData({
+		pageNum: page.pageNum,
+		pageSize: page.pageSize,
+		categoryId: categoryId.value
+	});
 	// console.log(e);
 };
-const touch = ref<boolean>(false);
-const transition = (e: any) => {
+
+//不限
+const touchstartAll = (e: any): void => {
+	startPosition.value = e?.changedTouches[0]?.clientX;
+};
+const touchendAll = (e: any): void => {
+	endPosition.value = e?.changedTouches[0]?.clientX;
+	// console.log(endPosition.value - startPosition.value);
 	//向左滑动
-	if (currentIndex.value == 0) {
-		if (e?.detail?.dx < -100) {
-			if (largeCategoryIndex.value > 0) {
-				if (touch.value) {
-					return;
-				}
-				touch.value = true;
-				//大类index--
-				largeCategoryIndex.value--;
-				activeId1.value = proData?.data?.children[largeCategoryIndex.value]?.id;
-				let data = proData?.data?.children[largeCategoryIndex.value]?.children;
-				//小类设为最后一个
-				activeId2.value = data[data.length - 1]?.id;
-				subclassIndex.value = data.length - 1;
-				//当前index  = length+1
-				currentIndex.value = data.length;
-			}
+	if (endPosition.value - startPosition.value > 0) {
+		if (largeCategoryIndex.value > 0) {
+			//大类index--
+			largeCategoryIndex.value--;
+			activeId1.value = proData?.data?.children[largeCategoryIndex.value]?.id;
+			let data = proData?.data?.children[largeCategoryIndex.value]?.children;
+			//小类设为最后一个
+			activeId2.value = data[data.length - 1]?.id;
+			subclassIndex.value = data.length - 1;
+			//当前index  = length+1
+			currentIndex.value = data.length + 1;
 		}
 	}
+};
+//其他
+const touchstart = (e: any): void => {
+	startPosition.value = e?.changedTouches[0]?.clientX;
+};
+const touchend = (e: any): void => {
+	endPosition.value = e?.changedTouches[0]?.clientX;
+	// console.log(endPosition.value - startPosition.value);
 	//向右滑动
 	if (currentIndex.value >= proData?.data?.children[largeCategoryIndex.value]?.children?.length) {
-		if (e?.detail?.dx > 100) {
+		if (endPosition.value - startPosition.value < 0) {
 			if (largeCategoryIndex.value < proData?.data?.children.length - 1) {
-				if (touch.value) {
-					return;
-				}
-				touch.value = true;
 				//大类index++
 				largeCategoryIndex.value++;
 				activeId1.value = proData?.data?.children[largeCategoryIndex.value]?.id;
 				//小类设为不限
 				subclassIndex.value = -1;
-				activeId2.value = 'All';
+				activeId2.value = activeId1.value + 'All';
 				currentIndex.value = 0;
 			}
 		}
 	}
-};
-const animationfinish = (e: any) => {
-	activeId2.value = e?.detail?.currentItemId;
-	currentIndex.value = e?.detail?.current;
-	touch.value = false;
-	console.log(currentIndex.value);
 };
 </script>
 
@@ -287,6 +327,9 @@ const animationfinish = (e: any) => {
 	.main {
 		background-color: #fff;
 		height: calc(100vh - 44px - 68px);
+		.swiper-box {
+			height: 100%;
+		}
 	}
 }
 </style>
